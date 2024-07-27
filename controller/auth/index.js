@@ -1,9 +1,8 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const UserModel = require("../../models/users");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-
-const JWT_SECRET = "helloiamgabrielandomoidontireomyheaddeypainmeganbutwepushhardernopainnogain";
 
 async function hashPass(password) {
   const res = await bcrypt.hash(password, 10);
@@ -30,7 +29,7 @@ const Log = async (req, res) => {
     if (!user) {
       return res.status(400).json("Invalid email");
     }
- 
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json("Invalid Password");
@@ -39,17 +38,19 @@ const Log = async (req, res) => {
     //create a token - use the user id and email from the data you grabbed from the database
     const token = jwt.sign(
       { userId: user._id, email: user.email },
-      JWT_SECRET, // Ensure you have a JWT secret in your environment variables
-      { expiresIn: "1h" } // Token expiration time
+      process.env.SECRET_KEY, // Ensure you have a JWT secret in your environment variables
+      { expiresIn: "10s" } // Token expiration time
     );
-    console.log(token)
     
-    return res.status(200).json({ msg: "Logged in succesfully", access_token: token });
+
+    return res
+      .status(200)
+      .json({ msg: "Logged in succesfully", access_token: token });
   } catch (error) {
     console.log("Error during login");
   }
 };
- 
+
 const Reg = async (req, res) => {
   const { username, password, email } = req.body;
 
@@ -66,17 +67,13 @@ const Reg = async (req, res) => {
   try {
     const existingUser = await UserModel.findOne({ email });
     let id;
-    console.log(existingUser)
-    
+    console.log(existingUser);
+
     if (existingUser) {
       id = existingUser._id.toString();
-      return res.status(400).json({ msg:"Email is already registered" });
-    };
-    const Token = jwt.sign(
-      { _id: id },
-      "helloiamgabrielandomoidontireomyheaddeypainmeganbutwepushhardernopainnogain"
-    );
-
+      return res.status(400).json({ msg: "Email is already registered" });
+    }
+    const Token = jwt.sign({ _id: id }, process.env.SECRET_KEY);
 
     //console.log(Token);
     await UserModel.updateOne({ _id: id }, { $set: { token: Token } });

@@ -25,8 +25,9 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
   console.log('Backend connected')
 });
-
+//for Login and Register
 app.use("/auth", authRoutes);
+//for adding to cart
 app.use("/carts", cartsRoutes);
 
 ///create product
@@ -50,10 +51,10 @@ app.get("/find-products/:id", async (req, res) => {
 
   const products = await Product.findById(req.params.id);
   if (!products) {
-    res.send("item not found");
+    res.status(400).json("item not found");
   }
   //console.log(products)
-  res.send(products);
+  res.status(200).json(products);
 });
 
 //update
